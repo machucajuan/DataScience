@@ -1,0 +1,75 @@
+---
+title: "Pokemon Plot"
+author: "Juan Machuca"
+date: "8/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Plotting Pokemon Data using Tidyverse and some of its packages 
+
+This is an example on how to make simple plots using ggplot2, dplyr and other tidyverse libraries. The data is extracted directly from the web from Keith Galli's Github Pokemon Repository. In this brief work, I make a quick overview of R syntax to make simple bar charts for the purpose of exploratory data analysis and data visualization. I also employed the dplyr package for the purpose of data wrangling and manipulation. 
+
+```{r}
+
+#Download tidyverse library and pull data from github
+library(tidyverse)
+pokedex <- read.csv("https://raw.githubusercontent.com/KeithGalli/pandas/master/pokemon_data.csv")
+head(pokedex)
+
+# Use dplyr package for: 
+#counting pokemon by type 1 and both type 1 & 2
+
+#Count Type 1
+pokemons_by_type <- pokedex %>% group_by (Type.1) %>% summarise(pokemons_type=n())%>% arrange(desc(pokemons_type))
+pokemons_by_type <- as.data.frame(pokemons_by_type)
+
+#Count Type 1 & 2
+pokemons_type_total <- pokedex %>% select(Type.1, Type.2) %>%  gather("Types")
+pokemon_type_total <- pokemons_type_total %>% group_by(value) %>% filter(value != "") %>% summarise(count=n())%>% arrange(desc(count))
+pokemon_type_total
+
+#Plot in Base R Pokemon type 1 and total 
+ggplot(pokemons_by_type, aes(Type.1, pokemons_type, fill = Type.1)) + 
+  geom_col() + 
+  coord_flip() +
+  ylab("Number of Pokemons") +
+  xlab('Type 1')
+
+ggplot(pokemon_type_total, aes(x=value,y=count, fill = value)) + 
+  geom_col() + 
+  coord_flip() +
+  ylab("Number of Pokemons") +
+  xlab('Types')
+
+#Plot using dplyr
+pokemons_by_type %>%
+  ggplot()+
+  geom_bar(aes(Type.1, pokemons_type, fill = Type.1 ),stat="identity")+
+  coord_flip()
+
+#Legendary Pokemon by Type
+legendary <- pokedex %>% select(Name, Type.1, Type.2, Legendary) %>% filter(Legendary==TRUE) 
+legendary_by_type <-legendary %>% select(Type.1, Type.2, Legendary) %>% gather('Legendary', 'Type')
+legendary_by_type <- legendary_by_type %>% group_by(Type) %>% filter(Type!= "") %>% summarise(count=n())%>% arrange(desc(Type))
+view(legendary_by_type)
+view(legendary)
+
+#Plot Legendary by Type
+legendary_by_type %>%
+  ggplot()+
+  geom_bar(aes(x=Type, y=count, fill=Type),stat="identity")+ 
+  coord_flip() +
+  ylab("Number of Legendary Pokemon") +
+  xlab('Types')
+
+#Summary statistics 
+summary(pokedex)
+summary(legendary_by_type)
+
+```
+
+
